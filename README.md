@@ -8,11 +8,7 @@ Hist2SR predicts spatial transcriptomics profiles from histopathology slides.
 - CUDA-enabled GPU (the default workflow targets `cuda:0`)
 - PyTorch, torchvision, timm, pandas, numpy, einops, tqdm, scikit-image, opencv-python, matplotlib
 
-Install dependencies with your preferred tool. Example:
 
-```bash
-pip install -r requirements.txt
-```
 
 ## Data and Checkpoints
 
