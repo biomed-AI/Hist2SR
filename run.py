@@ -2,10 +2,11 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Iterable, List, Optional
-
+import timm
+import gigapath.slide_encoder
 import pandas as pd
 import torch
-
+from huggingface_hub import login
 from HistToSR_pipeline.run import run_HistToSR
 from metrics.performance_eval import performance_summary
 
@@ -57,9 +58,14 @@ def _summarize_metrics(result_dir: Path) -> Optional[pd.DataFrame]:
 
 
 def run_pipeline(args: argparse.Namespace) -> None:
+
+    from huggingface_hub import login
+    import os
+    login(os.getenv("HUGGINGFACE_HUB_TOKEN"))
+
     data_dir = Path(args.data_dir).resolve()
-    tile_encoder_path = Path(args.tile_encoder).resolve()
-    slide_encoder_path = Path(args.slide_encoder).resolve()
+    tile_encoder_path = args.tile_encoder
+    slide_encoder_path = args.slide_encoder
 
     if not data_dir.exists():
         raise FileNotFoundError(f"Data directory not found: {data_dir}")
@@ -75,8 +81,13 @@ def run_pipeline(args: argparse.Namespace) -> None:
         logger.addHandler(handler)
 
     logger.info("Loading encoders once for all slides...")
-    tile_encoder = _load_encoder(tile_encoder_path, device_index)
-    slide_encoder = _load_encoder(slide_encoder_path, device_index)
+    # tile_encoder = _load_encoder(tile_encoder_path, device_index)
+    # slide_encoder = _load_encoder(slide_encoder_path, device_index)
+
+
+    tile_encoder = timm.create_model("hf_hub:prov-gigapath/prov-gigapath", pretrained=False, checkpoint_path=tile_encoder_path)
+    slide_encoder = gigapath.slide_encoder.create_model(slide_encoder_path, "gigapath_slide_enc12l768d", 1536)
+
 
     folders = list(
         _iter_target_folders(data_dir, args.folders, args.blacklist or [])
